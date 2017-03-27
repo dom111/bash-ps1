@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>bash PS1</title>
+
+        <link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"/>
+        <link rel="stylesheet" type="text/css" href="https://cdn.rawgit.com/itsjavi/bootstrap-colorpicker/master/dist/css/bootstrap-colorpicker.min.css"/>
+        <link rel="stylesheet" type="text/css" href="style.css"/>
+    </head>
+    <body>
+        <div class="jumbotron">
+            <div class="container">
+                <h1>bash <code>PS1</code></h1>
+                <p>Paste in your existing <code>PS1</code> string to help understand what each of the blocks does.</p>
+                <p>Eventually you'll be able to add commonly used components and style them the way you want, with a live preview of how it'll look!</p>
+            </div>
+        </div>
+
+        <div class="container">
+            <section class="parser panel panel-primary">
+                <div class="panel-heading panel-heading-lg">
+                    <h2 class="panel-title panel-title-lg">Parser</h2>
+                </div>
+                <div class="panel-body">
+                    <div class="form-group label-floating">
+                        <label for="input" class="control-label">Paste your <code><abbr title="Run &nbsp; echo $PS1 &nbsp; in your terminal to see your current prompt.">PS1</abbr></code>, or load an example: <a href="#load" class="load-example" data-content="[\u@\h \W]\$ ">default</a>, <a href="#load" class="load-example" data-content="\[\e[38;5;81m\]\u\[\e[38;5;141m\]@\[\e[38;5;154m\]\h\[\e[38;5;186m\]$(__git_ps1 &quot; [%s]&quot;) \[\e[38;5;197m\]\w \[\e[38;5;141m\]\$\[\e[0m\]">monokai-based</a><!--, <a href="#load" class="load-example" data-content="\[\e[48;5;81m\]\[\e[30m\] \u \[\e[38;5;81m\]\[\e[48;5;154m\]▶\[\e[30m\] \h \[\e[38;5;154m\]\[\e[48;5;186m\]▶\[\e[30m\] $(__git_ps1 &quot;%s&quot;) \[\e[38;5;186m\]\[\e[48;5;197m\]▶\[\e[30m\] \w \[\e[38;5;197m\]\[\e[48;5;141m\]▶\[\e[30m\] \$ \[\e[38;5;141m\]\[\e[49m\]▶ \[\e[39m\]">powerline/monokai style</a>-->.</label>
+                        <textarea id="input" class="form-control" rows="1"></textarea>
+                    </div>
+
+                    <pre class="parsed"></pre>
+
+                    <div class="form-group label-floating">
+                        <label class="control-label">Copy the below into your terminal to test, or paste into your <code>.bashrc</code> to make permanent.</label>
+                        <pre class="copy-paste"><code>export PS1='<span class="contents"></span>';</code><a href="#copy" class="copy btn btn-xs btn-primary" data-clipboard-target="pre.copy-paste code">Copy</a></pre>
+                    </div>
+                </div>
+
+                <div class="panel-footer">
+                    <aside class="options">
+                        <h3>Options</h3>
+
+                        <div class="global-options">
+                            <div class="form-group">
+                                <div class="checkbox">
+                                    <label>
+                                        <input type="checkbox" name="root"> Super user?
+                                    </label>
+                                </div>
+                                <p class="help-block">Toggle being root on or off.</p>
+                            </div>
+
+                            <div class="form-group">
+                                <div class="checkbox">
+                                    <label>
+                                        <input type="checkbox" name="light"> Light terminal
+                                    </label>
+                                </div>
+                                <p class="help-block">White background, black text.</p>
+                            </div>
+<!--
+                            <div class="form-group">
+                                <div class="checkbox">
+                                    <label>
+                                        <input type="checkbox" name="powerline"> Use Powerline font
+                                    </label>
+                                </div>
+                                <p class="help-block">You need to be using this font in your terminal emulator too!</p>
+                            </div>
+-->
+<!--
+                            <div class="form-group">
+                                <div class="checkbox">
+                                    <label>
+                                        <input type="checkbox" name="bright"> Bold means bright.
+                                    </label>
+                                </div>
+                                <p class="help-block">In some terminals, instead of bold fonts, brighter colours are used</p>
+                            </div>
+-->
+                            <h4>Colours</h4>
+                            <div class="form-group">
+<!--
+                                <div class="radio">
+                                    <label>
+                                        <input type="radio" name="colours" value="16">
+                                        16
+                                    </label>
+                                </div>
+                                <div class="radio">
+                                    <label>
+                                        <input type="radio" name="colours" value="88">
+                                        88
+                                    </label>
+                                </div>
+-->
+                                <div class="radio">
+                                    <label>
+                                        <input type="radio" name="colours" value="256" checked>
+                                        256
+                                    </label>
+                                </div>
+                                <div class="radio">
+                                    <label>
+                                        <input type="radio" name="colours" value="true">
+                                        True colour
+                                    </label>
+                                </div>
+                            </div>
+
+<!--
+                            <div class="form-group">
+                                <label>
+                                    <input type="range" name="opacity" min="0" max="1" value="1" step="0.01" class="form-control"> My terminal isn't opaque!
+                                </label>
+                                <p class="help-block">This slider adjusts the opacity of the element, to simlulate your transparency.</p>
+                            </div>
+
+                            <h4 title="I hate the pipe cursor! Give me the underscore!">Cursor type</h4>
+                            <div class="form-group">
+                                <div class="radio">
+                                    <label>
+                                        <input type="radio" name="cursor" value="pipe" checked>
+                                        Pipe (<code>|</code>)
+                                    </label>
+                                </div>
+                                <div class="radio">
+                                    <label>
+                                        <input type="radio" name="cursor" value="underscore">
+                                        Underscore (<code>_</code>)
+                                    </label>
+                                </div>
+                                <div class="radio">
+                                    <label>
+                                        <input type="radio" name="cursor" value="block">
+                                        Block (<code>&#x2588;</code>)
+                                    </label>
+                                </div>
+                            </div>
+-->
+                        </div>
+
+                        <div class="specific-options">
+                            <h4 title="I need specific escapes for my terminal (or I'm just controlling)">Escape options</h4>
+                            <div class="form-group">
+                                <button class="btn btn-primary convert-escape" data-value="\x1b">Convert to <code>\x1b</code></button>
+                                <button class="btn btn-primary convert-escape" data-value="\033">Convert to <code>\033</code></button>
+                                <button class="btn btn-primary convert-escape" data-value="\e">Convert to <code>\e</code></button>
+                                <!-- <button class="btn btn-primary convert-escape" data-value="&#x1b;">Convert to literal escape</button> -->
+                            </div>
+
+                            <h4 title="I hate when my terminal gets confused in the middle of the line...">Wrap Styling</h4>
+                            <p>This sets all styling escape sequences as zero-length preventing most weirdness when your cursor wraps at the end of the line.
+                            <div class="form-group">
+                                <button class="btn btn-primary wrap-styling" data-prefix="\[" data-suffix="\]"><code>\[</code>...<code>\]</code></button>
+                            </div>
+                        </div>
+                    </aside>
+                </div>
+            </section>
+
+            <section class="builder panel panel-default">
+                <div class="panel-heading panel-heading-lg">
+                    <h2 class="panel-title panel-title-lg">Breakdown</h2>
+                </div>
+                <div class="panel-body">
+<!--
+                    <div class="sources panel btn-group" role="group">
+                        <a class="draggable btn btn-primary" draggable="true" data-type="styling">Styling</a>
+                        <a class="draggable btn btn-primary" draggable="true" data-type="token">Token</a>
+                        <a class="draggable btn btn-primary" draggable="true" data-type="text">Plain Text</a>
+                        <a class="draggable btn btn-primary" draggable="true" data-type="command">External Action</a>
+                        <a class="draggable btn btn-primary" draggable="true" data-type="hex">Hex</a>
+                        <a class="draggable btn btn-primary" draggable="true" data-type="octal">Octal</a>
+                    </div>
+-->
+                    <div class="blocks row"></div>
+
+                    <div class="templates hidden">
+                        <div class="block styling col-md-3" data-type="styling">
+                            <div class="panel panel-default">
+                                <!-- <div class="panel-heading" draggable="true"> -->
+                                <div class="panel-heading">
+                                    <h3 class="panel-title pull-left">Styling</h3>
+                                    <a href="#delete-block" class="btn btn-xs btn-danger delete-block pull-right"><span class="glyphicon glyphicon-remove"></span> Delete</a>
+                                </div>
+                                <div class="panel-body">
+                                    <div class="form-group">
+                                        <label>Background</label>
+                                        <div class="input-group">
+                                            <input type="text" name="bg" class="form-control colorpicker" placeholder="Default">
+                                            <span class="input-group-addon bg">&nbsp;</span>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Text</label>
+                                        <div class="input-group">
+                                            <input type="text" name="fg" class="form-control colorpicker" placeholder="Default">
+                                            <span class="input-group-addon fg">&nbsp;</span>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-6 bold">
+                                            <div class="checkbox">
+                                                <label>
+                                                    <input type="checkbox" name="bold"> Bold
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="checkbox">
+                                                <label>
+                                                    <input type="checkbox" name="dim"> Dim
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="checkbox">
+                                                <label>
+                                                    <input type="checkbox" name="italic"> Italic
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="checkbox">
+                                                <label>
+                                                    <input type="checkbox" name="underline"> Underline
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="checkbox">
+                                                <label>
+                                                    <input type="checkbox" name="overline"> Overline
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="checkbox">
+                                                <label>
+                                                    <input type="checkbox" name="strikethrough"> Strikethrough
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="checkbox">
+                                                <label>
+                                                    <input type="checkbox" name="blink"> Blink
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="checkbox">
+                                                <label>
+                                                    <input type="checkbox" name="invert"> Invert
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="checkbox">
+                                                <label>
+                                                    <input type="checkbox" name="hidden"> Hidden
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="checkbox">
+                                                <label>
+                                                    <input type="checkbox" name="wrap"> Wrap
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="block command col-md-3" data-type="command">
+                            <div class="panel panel-default">
+                                <!-- <div class="panel-heading" draggable="true"> -->
+                                <div class="panel-heading">
+                                    <h3 class="panel-title pull-left">External Action</h3>
+                                    <a href="#delete-block" class="btn btn-xs btn-danger delete-block pull-right"><span class="glyphicon glyphicon-remove"></span> Delete</a>
+                                </div>
+                                <div class="panel-body">
+                                    <div class="form-group">
+                                        <label>Command</label>
+                                        <input type="text" name="value" class="form-control">
+                                    </div>
+                                </div>
+                                <div class="panel-footer">
+                                    <p class="help-block">Click on the block's definition in the preview area to set a default value to be displayed.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="block token col-md-3" data-type="token">
+                            <div class="panel panel-default">
+                                <!-- <div class="panel-heading" draggable="true"> -->
+                                <div class="panel-heading">
+                                    <h3 class="panel-title pull-left">Token</h3>
+                                    <a href="#delete-block" class="btn btn-xs btn-danger delete-block pull-right"><span class="glyphicon glyphicon-remove"></span> Delete</a>
+                                </div>
+                                <div class="panel-body">
+                                    <div class="form-group">
+                                        <select name="value" class="form-control">
+                                            <option></option>
+                                            <option value="\!">History number (125)</option>
+                                            <option value="\#">Command number (126)</option>
+                                            <option value="\$"># if root, $ otherwise</option>
+                                            <option value="\\">Backslash (\)</option>
+                                            <option value="\a">Bell (\a)</option>
+                                            <option value="\d">Date (Tue Aug 26)</option>
+                                            <option value="\h">Hostname (hostname)</option>
+                                            <option value="\H">Full hostname (hostname.domain.com)</option>
+                                            <option value="\j">Current jobs (0)</option>
+                                            <option value="\l">Terminal device name (ttys001)</option>
+                                            <option value="\n">Newline (\n)</option>
+                                            <option value="\s">Name of the shell (-bash)</option>
+                                            <option value="\t">Time (13:26:52)</option>
+                                            <option value="\T">Time (01:26:52)</option>
+                                            <option value="\@">Time (01:26 pm)</option>
+                                            <option value="\u">Username (username)</option>
+                                            <option value="\v">Bash version (3.2)</option>
+                                            <option value="\V">Bash release (3.2.57)</option>
+                                            <option value="\W">Current directory (path)</option>
+                                            <option value="\w">Current path (/full/path)</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="panel-footer">
+                                    <p class="help-block">Click on the block's definition in the preview area to set a default value to be displayed.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="block text col-md-3" data-type="text">
+                            <div class="panel panel-default">
+                                <!-- <div class="panel-heading" draggable="true"> -->
+                                <div class="panel-heading">
+                                    <h3 class="panel-title pull-left">Plain Text</h3>
+                                    <a href="#delete-block" class="btn btn-xs btn-danger delete-block pull-right"><span class="glyphicon glyphicon-remove"></span> Delete</a>
+                                </div>
+                                <div class="panel-body">
+                                    <div class="form-group">
+                                        <label>Text</label>
+                                        <input type="text" name="value" class="form-control">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="block hex col-md-3" data-type="hex">
+                            <div class="panel panel-default">
+                                <!-- <div class="panel-heading" draggable="true"> -->
+                                <div class="panel-heading">
+                                    <h3 class="panel-title pull-left">Hex Character</h3>
+                                    <a href="#delete-block" class="btn btn-xs btn-danger delete-block pull-right"><span class="glyphicon glyphicon-remove"></span> Delete</a>
+                                </div>
+                                <div class="panel-body">
+                                    <div class="form-group">
+                                        <label>Character</label>
+                                        <input type="text" name="value" class="form-control">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="octal col-md-3" data-type="octal">
+                            <div class="panel panel-default">
+                                <!-- <div class="panel-heading" draggable="true"> -->
+                                <div class="panel-heading">
+                                    <h3 class="panel-title pull-left">Octal Character</h3>
+                                    <a href="#delete-block" class="btn btn-xs btn-danger delete-block pull-right"><span class="glyphicon glyphicon-remove"></span> Delete</a>
+                                </div>
+                                <div class="panel-body">
+                                    <div class="form-group">
+                                        <label>Character</label>
+                                        <input type="text" name="value" class="form-control">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="block variable col-md-3" data-type="variable">
+                            <div class="panel panel-default">
+                                <!-- <div class="panel-heading" draggable="true"> -->
+                                <div class="panel-heading">
+                                    <h3 class="panel-title pull-left">Variable</h3>
+                                    <a href="#delete-block" class="btn btn-xs btn-danger delete-block pull-right"><span class="glyphicon glyphicon-remove"></span> Delete</a>
+                                </div>
+                                <div class="panel-body">
+                                    <div class="form-group">
+                                        <label>Variable</label>
+                                        <input type="text" name="value" class="form-control">
+                                    </div>
+                                </div>
+                                <div class="panel-footer">
+                                    <p class="help-block">Click on the block's definition in the preview area to set a default value to be displayed.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/1.6.0/clipboard.min.js"></script>
+        <script src="https://cdn.rawgit.com/itsjavi/bootstrap-colorpicker/master/dist/js/bootstrap-colorpicker.js"></script>
+
+        <script type="text/javascript" src="parse.js"></script>
+        <script type="text/javascript" src="data.js"></script>
+        <script type="text/javascript" src="app.js"></script>
+    </body>
+</html>
