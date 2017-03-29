@@ -19,8 +19,7 @@ var parse = (function() {
         var classes = [],
         newStyle = $.extend({}, _currentStyle);
 
-        values = values.replace(/\b48;5;(\d+)\b/, '48_5_$1').replace(/\b38;5;(\d+)\b/, '38_5_$1')
-            .replace(/\b48;2;(\d+);(\d+);(\d+)\b/, '48_2_$1_$2_$3').replace(/\b38;2;(\d+);(\d+);(\d+)\b/, '38_2_$1_$2_$3');
+        values = values.replace(/\b48;5;(\d+)\b/, '48_5_$1').replace(/\b38;5;(\d+)\b/, '38_5_$1').replace(/\b48;2;(\d+);(\d+);(\d+)\b/, '48_2_$1_$2_$3').replace(/\b38;2;(\d+);(\d+);(\d+)\b/, '38_2_$1_$2_$3');
         values.split(/;/).forEach(function(value) {
             if (value == 0) {
                 newStyle = $.extend({}, _defaultStyle);
@@ -99,28 +98,57 @@ var parse = (function() {
             }
 
             if (match = value.match(/^38_2_(\d+)_(\d+)_(\d+)$/)) {
-                newStyle.fg = 'true-' + match[1] + '-' + match[2] + '-' + match[3];
+                newStyle.fg = _simplifyColour('true-' + match.slice(1).join('-'));
             }
             else if (match = value.match(/^38_5_(\d+)$/)) {
-                newStyle.fg = '256-' + match[1];
+                newStyle.fg = _simplifyColour('256-' + match[1]);
             }
             else if (match = value.match(/^(3|9)[0-79]$/)) {
                 newStyle.fg = value;
             }
 
             if (match = value.match(/^^48_2_(\d+)_(\d+)_(\d+)$/)) {
-                newStyle.bg = 'true-' + match[1] + '-' + match[2] + '-' + match[3];
+                newStyle.bg = _simplifyColour('true-' + match.slice(1).join('-'), true);
             }
             else if (match = value.match(/^48_5_(\d+)$/)) {
-                newStyle.bg = '256-' + match[1];
+                newStyle.bg = _simplifyColour('256-' + match[1], true);
             }
             else if (match = value.match(/^(4|10)[0-79]$/)) {
                 newStyle.bg = value;
             }
-
         });
 
         return newStyle;
+    },
+    _simplifyColour = function(colour, bg) {
+        var match,
+        prefix = bg ? '4' : '3',
+        brightPrefix = bg ? '10' : '9';
+
+        if (match = colour.match(/^true-(\d+)-(\d+)-(\d+)/)) {
+            if (match = _rgbToTerm256(match.slice(1), true)) {
+                colour = '256-' + match;
+            }
+        }
+
+        if (match = colour.match(/^256-(\d+)/)) {
+            if (match[1] < 16) {
+                if (match[1] < 8) {
+                    colour = prefix + match[1];
+                }
+                else {
+                    colour = brightPrefix + (match[1] % 8);
+                }
+            }
+            else if (match[1] == 16) {
+                colour = prefix + '0';
+            }
+            else if (match[1] == 231) {
+                colour = brightPrefix + '7';
+            }
+        }
+
+        return colour;
     },
     _buildStyles = function(style) {
         var styleString = '\\e[';
@@ -129,7 +157,7 @@ var parse = (function() {
             var match;
 
             if (match = style[obj.key].match(/true-(\d+)-(\d+)-(\d+)/)) {
-                styleString += obj.n + ';2;' + match[1] + ';' + match[2] + ';' + match[3] + ';';
+                styleString += obj.n + ';2;' + match.slice(1).join(';');
             }
             else if (match = style[obj.key].match(/256-(\d+)/)) {
                 styleString += obj.n + ';5;' + match[1] + ';';
@@ -151,13 +179,14 @@ var parse = (function() {
     },
     _extract = function(string) {
         var patterns = {
+            stylingReset: /^(?:\\\[)?(?:\\033|\\e|\\x1[bB]|\x1b)\[(0)m(?:\\\])?/,
             styling: /^(?:\\\[)?(?:\\033|\\e|\\x1[bB]|\x1b)\[([^m]*)m(?:\\\])?/,
             command: /^(?:\\\[)?(?:\\?`([^`]+)\\?`|\\?\$\(([^)]+)\))(?:\\\])?/,
-            octal: /^(?:\\\])?\\(\d{3})(?:\\\])?/,
-            hex: /^(?:\\\])?\\x([0-9a-fA-F]{2})(?:\\\])?/,
-            token: /^(?:\\\])?(\\[!#$@\\aAdhHjlnsTtuvVWw])(?:\\\])?/,
-            variable: /^(?:\\\])?\$\{?(\w+|\?)\}?(?:\\\])?/,
-            text: /^(?:\\\])?([\S\s])(?:\\\])?/
+            octal: /^\\(\d{3})/,
+            hex: /^\\x([0-9a-fA-F]{2})/,
+            token: /^( |\\[!#$@\\aAdhHjlnsTtuvVWw])/,
+            variable: /^\$\{?(\w+|\?)\}?/,
+            text: /^([\S\s])/
         },
         data = [],
         match, last, matched;
@@ -225,16 +254,13 @@ var parse = (function() {
         _currentStyle = $.extend({}, _defaultStyle);
 
         data.forEach(function(block) {
-            var match,
-            newStyle,
-
-            _escape = function(s) {
+            var _escape = function(s) {
                 s = s || "";
 
                 return s.replace(/"/g, "&quot;");
             };
 
-            if (block.type === 'styling') {
+            if (block.type.match(/styling/)) {
                 if (code.match(/<span class="block styling/)) {
                     code += '</span>';
                 }
@@ -261,106 +287,143 @@ var parse = (function() {
             else if (block.type === 'octal') {
                 code += '<span class="block ' + block.type + '" data-content="' + _escape(block.content) + '" data-value="' + _escape(String.fromCharCode(parseInt(block.value, 8))) + '" data-type="' + block.type + '"><span class="content">' + block.content + '</span></span>';
             }
-
-            _addBuilderBlock(block);
         });
 
         code += '<span class="next-command"></span>';
 
 
-        if (code.match(/<span class="styling/)) {
+        if (code.match(/<span class="block styling/)) {
             code += '</span>';
         }
 
         return code;
-    },
-    _addBuilderBlock = function(block) {
-        var blocksContainer = $('section.builder div.blocks'),
-        template = $('.templates [data-type="' + block.type + '"]').clone();
-
-        template.attr('data-value', block.value).attr('data-content', block.content);
-
-        if (block.type === 'styling') {
-            $.each(_parseStyles(block.value), function(key, value) {
-                var element = template.find('[name="' + key + '"]');
-
-                if (element.is('[type="checkbox"], [type="radio"]')) {
-                    element.prop('checked', value);
-                }
-                else if (element.is('[type="text"]')) {
-                    element.val(value);
-                }
-            });
-
-            template.find('.input-group-addon.bg').addClass('bg-' + (block.style.bg || _defaultStyle.bg));
-            template.find('.input-group-addon.fg').addClass('bg-' + (block.style.fg || _defaultStyle.fg));
-        }
-        else {
-            template.find('[name="value"]').val(block.value);
-        }
-
-        if (block.wrap) {
-            template.find('[name="wrap"]').prop('checked', true);
-        }
-
-        template.data('block', block);
-
-        blocksContainer.append(template);
     },
     parse = function(string) {
         return _process(_extract(string));
     },
 
     // store out here to build once and re-use
-    _colours = [],
-    _rgbToTerm = function(r, g, b) {
-        var _buildColours = function() {
-            _colours.push([0, 0, 0, 0]);
-            _colours.push([128, 0, 0, 1]);
-            _colours.push([0, 128, 0, 2]);
-            _colours.push([128, 128, 0, 3]);
-            _colours.push([0, 0, 128, 4]);
-            _colours.push([128, 0, 128, 5]);
-            _colours.push([0, 128, 128, 6]);
-            _colours.push([192, 192, 192, 7]);
-            _colours.push([128, 128, 128, 8]);
-            _colours.push([255, 0, 0, 9]);
-            _colours.push([0, 255, 0, 10]);
-            _colours.push([255, 255, 0, 11]);
-            _colours.push([0, 0, 255, 12]);
-            _colours.push([255, 0, 255, 13]);
-            _colours.push([0, 255, 255, 14]);
-            _colours.push([255, 255, 255, 15]);
+    _colours = (function() {
+        var _colours = [];
+        _colours.push([0, 0, 0, 0]);
+        _colours.push([128, 0, 0, 1]);
+        _colours.push([0, 128, 0, 2]);
+        _colours.push([128, 128, 0, 3]);
+        _colours.push([0, 0, 128, 4]);
+        _colours.push([128, 0, 128, 5]);
+        _colours.push([0, 128, 128, 6]);
+        _colours.push([192, 192, 192, 7]);
+        _colours.push([128, 128, 128, 8]);
+        _colours.push([255, 0, 0, 9]);
+        _colours.push([0, 255, 0, 10]);
+        _colours.push([255, 255, 0, 11]);
+        _colours.push([0, 0, 255, 12]);
+        _colours.push([255, 0, 255, 13]);
+        _colours.push([0, 255, 255, 14]);
+        _colours.push([255, 255, 255, 15]);
 
-            [0, 95, 135, 175, 215, 255].forEach(function(r) {
-                [0, 95, 135, 175, 215, 255].forEach(function(g) {
-                    [0, 95, 135, 175, 215, 255].forEach(function(b) {
-                        _colours.push([r, g, b, 16 + parseInt('' + Math.floor((r / 255) * 5) + Math.floor((g / 255) * 5) + Math.floor((b / 255) * 5), 6)]);
-                    });
+        [0, 95, 135, 175, 215, 255].forEach(function(r) {
+            [0, 95, 135, 175, 215, 255].forEach(function(g) {
+                [0, 95, 135, 175, 215, 255].forEach(function(b) {
+                    _colours.push([r, g, b, 16 + parseInt('' + Math.floor((r / 255) * 5) + Math.floor((g / 255) * 5) + Math.floor((b / 255) * 5), 6)]);
                 });
             });
+        });
 
-            [8, 18, 28, 38, 48, 58, 68, 78, 88, 98, 108, 118, 128, 138, 148, 158, 168, 178, 188, 198, 208, 218, 228, 238].forEach(function(s) {
-                _colours.push([s, s, s, 232 + Math.floor(s / 10)]);
-            });
-        },
-        _best = function(candidates, source) {
-            return candidates.slice(0).sort(function(x, y) {
-                return (Math.abs(x[0] - source[0]) + Math.abs(x[1] - source[1]) + Math.abs(x[2] - source[2])) - (Math.abs(y[0] - source[0]) + Math.abs(y[1] - source[1]) + Math.abs(y[2] - source[2])) || (x[3] - y[3]); // prefer lower colour numbers
-            })[0];
-        };
+        [8, 18, 28, 38, 48, 58, 68, 78, 88, 98, 108, 118, 128, 138, 148, 158, 168, 178, 188, 198, 208, 218, 228, 238].forEach(function(s) {
+            _colours.push([s, s, s, 232 + Math.floor(s / 10)]);
+        });
 
-        if (!_colours.length) {
-            _buildColours();
+        return _colours;
+    })(),
+    _getClosest = function(candidates, source) {
+        return candidates.slice(0).sort(function(x, y) {
+            return (Math.abs(x[0] - source[0]) + Math.abs(x[1] - source[1]) + Math.abs(x[2] - source[2])) - (Math.abs(y[0] - source[0]) + Math.abs(y[1] - source[1]) + Math.abs(y[2] - source[2])) || (x[3] - y[3]); // prefer lower colour numbers
+        })[0];
+    },
+    _rgbToTerm16 = function(rgb, bg) {
+        return _simplifyColour('256-' + (_getClosest(_colours.slice(0, 16), rgb) || [])[3], bg);
+    },
+    _rgbToTerm256 = function(rgb, exact) {
+        if (exact) {
+            exact = _colours.filter(function(colour) {
+                return colour[0] == rgb[0] && colour[1] == rgb[1] && colour[2] === rgb[2];
+            })[0] || [];
+
+            return exact[3];
         }
 
-        return (_best(_colours, [r, g, b]) || [])[3];
+        return (_getClosest(_colours, rgb) || [])[3];
+    },
+    _term16ToRgb = function(id) {
+        // TODO: defaults based on selected option?
+        if (id == 49) {
+            return _colours[0].slice(0, 3);
+        }
+        else if (id == 39) {
+            return _colours[7].slice(0, 3);
+        }
+        // normal
+        else if (id < 50) {
+            return _colours[id % 10].slice(0, 3);
+        }
+        // bright
+        else {
+            return _colours[(id % 10) + 8].slice(0, 3);
+        }
+    },
+    _term256ToRgb = function(id) {
+        var value = [];
+
+        if (_colours[id][3] == id) {
+            return _colours[id].slice(0, 3);
+        }
+
+        $.each(_colours, function(colour) {
+            if (colour[3] == id) {
+                value = colour.slice(0, 3);
+            }
+        });
+
+        return value;
+    },
+    _hexToRgb = function(hex) {
+        var r = 0, g = 0, b = 0;
+
+        hex = hex.replace(/^#/, '');
+
+        if (hex.length === 3) {
+            r = parseInt(hex[0] + hex[0], 16);
+            g = parseInt(hex[1] + hex[1], 16);
+            b = parseInt(hex[2] + hex[2], 16);
+        }
+        else if (hex.length === 6) {
+            r = parseInt(hex[0] + hex[1], 16);
+            g = parseInt(hex[2] + hex[3], 16);
+            b = parseInt(hex[4] + hex[5], 16);
+        }
+
+        return [r, g, b];
+    },
+    _rgbToHex = function(rgb) {
+        return '#' + rgb.map(function(n) {
+            return (0 + n.toString(16)).substr(-2);
+        }).join('');
     };
 
+    // export for component use
     parse.extract = _extract;
     parse.process = _process;
+
+    parse.rgbToTerm256 = _rgbToTerm256;
+    parse.rgbToTerm16 = _rgbToTerm16;
+    parse.term256ToRgb = _term256ToRgb;
+    parse.term16ToRgb = _term16ToRgb;
+    parse.simplifyColour = _simplifyColour;
+    parse.hexToRgb = _hexToRgb;
+    parse.rgbToHex = _rgbToHex;
+
     parse.parseStyles = _parseStyles;
-    parse.rgbToTerm = _rgbToTerm;
     parse.buildStyles = _buildStyles;
     parse.defaultStyle = _defaultStyle;
 
