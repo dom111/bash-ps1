@@ -1,15 +1,16 @@
 (function($) {
     $(function() {
-        var parsed = $('pre.parsed'),
-        input = $('#input'),
+        var terminal = $('pre.terminal'),
         colours = $('[name="colours"]'),
         cursor = $('[name="cursor"]'),
+        root = $('[name="root"]'),
         light = $('[name="light"]'),
+        blink = $('[name="blink-cursor"]'),
 
         _updateBuilder = function() {
             $('section.builder div.blocks').empty();
 
-            parse.extract(input.val()).forEach(function(block) {
+            parse.extract(terminal.text()).forEach(function(block) {
                 _addBuilderBlock(block);
             });
         },
@@ -83,8 +84,8 @@
         _shareLink = function() {
             var url = window.location.href.replace(/#.+/, '');
 
-            if (input.val()) {
-                url += '#!input=' + btoa(input.val()) + '&' + $('.global-options input:checked').serialize();
+            if (terminal.text()) {
+                url += '#!terminal=' + btoa(terminal.text()) + '&' + $('.global-options :checked').serialize();
             }
 
             if (window.location.href != url) {
@@ -94,17 +95,17 @@
             return url;
         },
         _updateDisplay = function() {
-            parsed.html(parse(input.val()));
-            $('.copy-paste .contents').html(input.val());
-            input.height(0).height(input.prop('scrollHeight') - (parseInt(input.css('padding-top')) + parseInt(input.css('padding-bottom'))));
+            $('.copy-paste .contents').html(terminal.text());
         },
         _loadFromHash = function() {
             if (window.location.hash) {
                 var data = window.location.hash.replace(/^#!/, ''),
                 elements = {
-                    input: input,
+                    terminal: terminal,
                     colours: colours,
                     cursor: cursor,
+                    blink: blink,
+                    root: root,
                     light: light
                 };
 
@@ -115,19 +116,20 @@
                     element = elements[data[0]],
                     value;
 
-                    if (element === input) {
+                    if (element === terminal) {
                         value = atob(data[1]);
+                        element.text(value).trigger('change');
                     }
                     else {
                         value = data[1];
-                    }
 
-                    if (element) {
-                        if (element.is('[type="radio"], [type="checkbox"]')) {
-                            element.filter('[value="' + value + '"]').prop('checked', true).trigger('change');
-                        }
-                        else {
-                            element.val(value).trigger('change');
+                        if (element) {
+                            if (element.is('[type="radio"], [type="checkbox"]')) {
+                                element.filter('[value="' + value + '"]').prop('checked', true).trigger('change');
+                            }
+                            else {
+                                element.val(value).trigger('change');
+                            }
                         }
                     }
                 });
@@ -148,13 +150,12 @@
             }, 5000);
         });
 
-
-        input.on('change', function() {
-            _updateBuilder();
+        terminal.on('change', function() {
             _updateDisplay();
+            _updateBuilder();
         });
 
-        $('pre.parsed').on('click', 'span.block:not(.styling)', function() {
+        $('.terminal').on('click', 'span.block:not(.styling)', function() {
             var value = prompt('Enter desired preview text:', $(this).attr('data-preview'));
 
             if (value) {
@@ -167,22 +168,22 @@
 
         $('.global-options input[type="checkbox"]').on('change', function() {
             if (this.checked) {
-                parsed.addClass(this.name);
+                terminal.addClass(this.name);
             }
             else {
-                parsed.removeClass(this.name);
+                terminal.removeClass(this.name);
             }
         });
 
         $('.global-options input[type="radio"]').on('change', function() {
-            parsed.removeClass(function() {
+            terminal.removeClass(function() {
                 return Array.from(this.classList).filter(function(className) {
                     return className.match(/cursor-/);
                 }).join(' ');
             });
 
             if (this.checked) {
-                parsed.addClass(this.name + '-' + this.value);
+                terminal.addClass(this.name + '-' + this.value);
             }
         });
 
@@ -192,15 +193,15 @@
             }
 
             if (this.value === '256') {
-                if (input.val().match(/\b38;2;|\b48;2;/)) {
+                if (terminal.text().match(/\b38;2;|\b48;2;/)) {
                     if (confirm('Would you like to convert all existing colours to the 256 colour palette? (You can use the back button to undo)')) {
                         _shareLink();
 
-                        input.val(input.val().replace(/38;2;(\d+);(\d+);(\d+)/, function(string, r, g, b) {
+                        terminal.html(parse(terminal.text().replace(/38;2;(\d+);(\d+);(\d+)/, function(string, r, g, b) {
                             return '38;5;' + parse.rgbToTerm256([r, g, b]).replace(/256-/, '');
                         }).replace(/48;2;(\d+);(\d+);(\d+)/g, function(string, r, g, b) {
                             return '48;5;' + parse.rgbToTerm256([r, g, b]).replace(/256-/, '');
-                        }));
+                        })));
 
                         _updateDisplay();
                         _updateBuilder();
@@ -214,11 +215,11 @@
                 }
             }
             else if (this.value === '16') {
-                if (input.val().match(/\b38;2;|\b48;2;|\b38;5;|\b48;5;/)) {
+                if (terminal.text().match(/\b38;2;|\b48;2;|\b38;5;|\b48;5;/)) {
                     if (confirm('Would you like to convert all existing colours to the 16 colour palette? (You can use the back button to undo)')) {
                         _shareLink();
 
-                        input.val(input.val().replace(/38;2;(\d+);(\d+);(\d+)/g, function(string, r, g, b) {
+                        terminal.html(parse(terminal.text().replace(/38;2;(\d+);(\d+);(\d+)/g, function(string, r, g, b) {
                             return '38;5;' + parse.rgbToTerm16([r, g, b]);
                         }).replace(/48;2;(\d+);(\d+);(\d+)/g, function(string, r, g, b) {
                             return '48;5;' + parse.rgbToTerm16([r, g, b], true);
@@ -226,7 +227,7 @@
                             return parse.rgbToTerm16(parse.term256ToRgb(id));
                         }).replace(/48;5;(\d+)/g, function(string, id) {
                             return parse.rgbToTerm16(parse.term256ToRgb(id), true);
-                        }));
+                        })));
 
                         _updateDisplay();
                         _updateBuilder();
@@ -242,13 +243,13 @@
         });
 
         $('.global-options input[name="opacity"]').on('change', function() {
-            parsed.css('opacity', this.value);
+            terminal.css('opacity', this.value);
         });
 
         $('.specific-options .convert-escape').on('click', function(event) {
             event.preventDefault();
 
-            input.val(input.val().replace(/\\x1b|\\033|\\e|\x1b/g, $(this).attr('data-value')));
+            terminal.html(parse(terminal.text().replace(/\\x1b|\\033|\\e|\x1b/g, $(this).attr('data-value'))));
 
             _updateDisplay();
         });
@@ -286,11 +287,10 @@
                 }
             }
 
-            input.val(example);
+            terminal.html(parse(example));
 
-            _updateBuilder();
             _updateDisplay();
-            _shareLink();
+            _updateBuilder();
         });
 
         $('.builder .blocks').on('click', '.delete-block', function(event) {
@@ -302,13 +302,15 @@
         });
 
         $(document).on('builder.compile', function() {
-            input.val('');
+            terminal.text('');
 
             $('.builder .blocks .block').each(function() {
                 var block = $(this).data('block');
 
-                input.val(input.val() + block.content);
+                terminal.text(terminal.text() + block.content);
             });
+
+            terminal.html(parse(terminal.text()));
 
             _updateDisplay();
         });
@@ -417,29 +419,29 @@
                     last = Date.now();
 
                     if ($(window).scrollTop() >= (offset - 15)) {
-                        if (!parsed.hasClass('detached')) {
-                            parsed.css({
-                                width: parsed.width() + 35,
-                                left: parsed.offset().left - 10
+                        if (!terminal.hasClass('detached')) {
+                            terminal.css({
+                                width: terminal.width() + 35,
+                                left: terminal.offset().left - 10
                             }).addClass('detached').after('<pre class="dummy terminal visibility-hidden"></pre>');
                         }
                     }
                     else {
-                        if (parsed.hasClass('detached')) {
-                            parsed.removeClass('detached').css({
+                        if (terminal.hasClass('detached')) {
+                            terminal.removeClass('detached').css({
                                 width: 'auto',
                                 left: 0
                             }).parent().find('.dummy').remove();
                         }
                         else {
-                            if (parsed.offset().top != offset) {
-                                offset = parsed.offset().top;
+                            if (terminal.offset().top != offset) {
+                                offset = terminal.offset().top;
                             }
                         }
                     }
                 }
             };
-        })(Date.now(), parsed.offset().top));
+        })(Date.now(), terminal.offset().top));
 
         $('.blocks').on('build', '.block', function() {
             var block = $(this).data('block'),

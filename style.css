@@ -5,8 +5,8 @@
     src: url(https://rawgit.com/powerline/fonts/master/UbuntuMono/Ubuntu%20Mono%20derivative%20Powerline.ttf);
 }*/
 
-h1 .version { display: none; color: #ccc; font-size: 0.8em; font-family: monospace; letter-spacing: -5px; }
-h1:hover .version { display: inline; }
+h1 .version { opacity: 0; font-size: 0.8em; font-family: monospace; letter-spacing: -5px; transition: .25s opacity linear; }
+h1:hover .version { opacity: .3; }
 
 .detached { position: fixed; top: 5px; z-index: 1; border: 10px solid #fff; outline: 1px solid #d2d2d2; box-shadow: #f6f6f6 0px 0px 20px; }
 .visibility-hidden { visibility: hidden; }
@@ -64,3 +64,30 @@ pre:hover a.btn { display: block; }
 .fg.bg-97 { background-color: #FFF; }
 
 body.no-clipboard .copy { display: none; }
+
+/* Terminal token overrides */
+/* @url http://tldp.org/HOWTO/Bash-Prompt-HOWTO/bash-prompt-escape-sequences.html */
+.terminal .token[data-value="\\!"]:after { content: '125'; }
+.terminal .token[data-value="\\#"]:after { content: '126'; }
+.terminal .token[data-value="\\$"]:after { content: '$'; }
+.terminal .token[data-value="\\@"]:after { content: '01:26 pm'; }
+.terminal .token[data-value="\\A"]:after { content: '13:26'; }
+.terminal .token[data-value="\\d"]:after { content: 'Tue Aug 26'; }
+.terminal .token[data-value="\\h"]:after { content: 'hostname'; }
+.terminal .token[data-value="\\H"]:after { content: 'hostname.domain.com'; }
+.terminal .token[data-value="\\j"]:after { content: '0'; }
+.terminal .token[data-value="\\l"]:after { content: 'ttys001'; }
+.terminal .token[data-value="\\s"]:after { content: '-bash'; }
+.terminal .token[data-value="\\T"]:after { content: '01:26:52'; }
+.terminal .token[data-value="\\t"]:after { content: '13:26:52'; }
+.terminal .token[data-value="\\u"]:after { content: 'username'; }
+.terminal .token[data-value="\\v"]:after { content: '3.2'; }
+.terminal .token[data-value="\\V"]:after { content: '3.2.0'; }
+.terminal .token[data-value="\\w"]:after { content: '/full/path'; }
+.terminal .token[data-value="\\W"]:after { content: 'path'; }
+.terminal.root .token[data-value="\\$"]:after { content: '#'; }
+
+.terminal .command[data-value='__git_ps1']:after { content: ' (master)'; }
+.terminal .command[data-value='__git_ps1 " [%s]"']:after { content: ' [master]'; }
+
+.terminal .cursor:before { content: './cmd -arg --arg=val'; }

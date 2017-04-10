@@ -184,7 +184,7 @@ var parse = (function() {
             command: /^(?:\\\[)?(?:\\?`([^`]+)\\?`|\\?\$\(([^)]+)\))(?:\\\])?/,
             octal: /^\\(\d{3})/,
             hex: /^\\x([0-9a-fA-F]{2})/,
-            token: /^( |\\[!#$@\\aAdhHjlnsTtuvVWw])/,
+            token: /^( |\\[!#$@\\0aAdehHjlnsTtuvVWw])/,
             variable: /^\$\{?(\w+|\?)\}?/,
             text: /^([\S\s])/
         },
@@ -289,7 +289,7 @@ var parse = (function() {
             }
         });
 
-        code += '<span class="next-command"></span>';
+        code += '<span class="cursor"></span>';
 
 
         if (code.match(/<span class="block styling/)) {

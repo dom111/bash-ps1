@@ -1,12 +1,16 @@
 @keyframes blink { 0% { opacity: 1; } 49% { opacity: 1; } 50% { opacity: 0; } 100% { opacity: 0; } }
 
-.terminal { font-family: monospace; min-height: 3.5em; padding: 1em .5em; background: #0C0C0C; color: #E5E5E5; line-height: 1.2em; }
+.terminal { position: relative; font-family: monospace; min-height: 1em; padding: 1em .5em; background: #0C0C0C; color: #E5E5E5; line-height: 1.2em; overflow-x: scroll; }
 .terminal.light { background: #FFF; color: #0C0C0C; }
 
-.terminal:after { content: '|'; animation: blink 1s linear infinite; }
-.terminal.cursor-underscore:after { content: '_'; }
-.terminal.cursor-block:after { content: '\02588'; }
-.terminal.no-cursor:after { content: ''; }
+.terminal::-webkit-scrollbar { background: transparent; height: 3px; }
+.terminal::-webkit-scrollbar-thumb { background: #999; border-radius: 1ex; }
+
+.terminal .cursor:after { content: ''; }
+.terminal.blink-cursor .cursor:after { animation: blink 1s linear infinite; }
+.terminal.cursor-pipe .cursor:after { content: '|'; }
+.terminal.cursor-underscore .cursor:after { content: '_'; }
+.terminal.cursor-block .cursor:after { content: '\02588'; }
 
 .terminal .dim .fg-90,
 .terminal .fg-30 { color: #0C0C0C; }
@@ -319,21 +323,21 @@
 .terminal .bg-49 { background-color: inherit; }
 
 .terminal .bright .bold.bg-40,
-.terminal .bg-90 { background-color: #4C4C4C; }
+.terminal .bg-100 { background-color: #4C4C4C; }
 .terminal .bright .bold.bg-41,
-.terminal .bg-91 { background-color: #FF0000; }
+.terminal .bg-101 { background-color: #FF0000; }
 .terminal .bright .bold.bg-42,
-.terminal .bg-92 { background-color: #00FF00; }
+.terminal .bg-102 { background-color: #00FF00; }
 .terminal .bright .bold.bg-43,
-.terminal .bg-93 { background-color: #FFFF00; }
+.terminal .bg-103 { background-color: #FFFF00; }
 .terminal .bright .bold.bg-44,
-.terminal .bg-94 { background-color: #4682B4; }
+.terminal .bg-104 { background-color: #4682B4; }
 .terminal .bright .bold.bg-45,
-.terminal .bg-95 { background-color: #FF00FF; }
+.terminal .bg-105 { background-color: #FF00FF; }
 .terminal .bright .bold.bg-46,
-.terminal .bg-96 { background-color: #00FFFF; }
+.terminal .bg-106 { background-color: #00FFFF; }
 .terminal .bright .bold.bg-47,
-.terminal .bg-97 { background-color: #FFF; }
+.terminal .bg-107 { background-color: #FFF; }
 
 .terminal .bg-256-0 { background-color: #000; }
 .terminal .bg-256-1 { background-color: #800000; }
@@ -601,8 +605,6 @@
 .terminal .hidden { visibility: hidden; }
 .terminal .blink { animation: blink 1s linear infinite; }
 
-.terminal .next-command:after { content: './this-is-how-your -commands --will=look'; }
-
 .terminal .hex .content,
 .terminal .octal .content,
 .terminal .styling > .content,
@@ -611,44 +613,46 @@
 .terminal .token .content,
 .terminal [data-preview] .content { display: inline-block; width: 0; color: transparent; }
 
-/* @url http://tldp.org/HOWTO/Bash-Prompt-HOWTO/bash-prompt-escape-sequences.html */
-.terminal .token[data-value=" "]:after { content: ' '; }
-.terminal .token[data-value="\\!"]:after { content: '125'; }
-.terminal .token[data-value="\\#"]:after { content: '126'; }
-.terminal .token[data-value="\\$"]:after { content: '$'; }
-.terminal .token[data-value="\\@"]:after { content: '01:26 pm'; }
-.terminal .token[data-value="\\\\"]:after { content: '\\'; }
-.terminal .token[data-value="\\a"]:after { content: '\7'; }
-.terminal .token[data-value="\\A"]:after { content: '13:26'; }
-.terminal .token[data-value="\\d"]:after { content: 'Tue Aug 26'; }
-.terminal .token[data-value="\\h"]:after { content: 'hostname'; }
-.terminal .token[data-value="\\H"]:after { content: 'hostname.domain.com'; }
-.terminal .token[data-value="\\j"]:after { content: '0'; }
-.terminal .token[data-value="\\l"]:after { content: 'ttys001'; }
-.terminal .token[data-value="\\n"]:after { content: '\A'; }
-.terminal .token[data-value="\\s"]:after { content: '-bash'; }
-.terminal .token[data-value="\\T"]:after { content: '01:26:52'; }
-.terminal .token[data-value="\\t"]:after { content: '13:26:52'; }
-.terminal .token[data-value="\\u"]:after { content: 'username'; }
-.terminal .token[data-value="\\v"]:after { content: '3.2'; }
-.terminal .token[data-value="\\V"]:after { content: '3.2.0'; }
-.terminal .token[data-value="\\W"]:after { content: 'path'; }
-.terminal .token[data-value="\\w"]:after { content: '/full/path'; }
-.terminal.root .token[data-value="\\$"]:after { content: '#'; }
+.terminal .hex:after,
+.terminal .octal:after,
+.terminal .variable:after,
+.terminal .command:after,
+.terminal .token:after { content: attr(data-content); }
 
-.terminal .command:after { content: attr(data-value); }
-.terminal .command[data-value='__git_ps1']:after { content: ' (master)'; }
-.terminal .command[data-value='__git_ps1 " [%s]"']:after { content: ' [master]'; }
+.terminal .token[data-value=" "]:after { content: ' '; }
+.terminal .token[data-value="\\0"]:after,
+.terminal .hex[data-content="\\x00"]:after,
+.terminal .octal[data-value="\\000"]:after { content: '\02400'; }
+.terminal .token[data-value="\\a"]:after,
+.terminal .hex[data-content="\\x0a"]:after,
+.terminal .hex[data-content="\\x0A"]:after,
+.terminal .octal[data-value="\\012"]:after { content: '\02407'; }
+.terminal .token[data-value="\\e"]:after,
+.terminal .hex[data-content="\\x1b"]:after,
+.terminal .hex[data-content="\\x1B"]:after,
+.terminal .octal[data-content="\\033"]:after { content: '\0241b'; }
+.terminal .token[data-value="\\t"]:after,
+.terminal .hex[data-content="\\x09"]:after,
+.terminal .octal[data-content="\\010"]:after { content: '\9'; }
+.terminal .token[data-value="\\n"]:after,
+.terminal .hex[data-content="\\x0a"]:after,
+.terminal .hex[data-content="\\x0A"]:after,
+.terminal .octal[data-content="\\011"]:after { content: '\A'; }
+.terminal .token[data-value="\\\\"]:after { content: '\\'; }
 
 .terminal [data-preview]:after { content: attr(data-preview) !important; }
 
-.terminal .hex:after,
-.terminal .octal:after { content: attr(data-value); }
-
 .terminal *::selection { background: transparent; }
-.terminal:hover *::selection { background: #fff; }
-
-.terminal:hover .content .wrap,
-.terminal:hover .content { color: inherit; display: inline; }
-.terminal:hover:after,
-.terminal:hover *:after { content: '' !important; }
+.terminal:focus *::selection,
+.terminal-wrap:hover *::selection { background: #fff; }
+.terminal:focus .content .wrap,
+.terminal:focus .content,
+.terminal-wrap:hover .terminal .content .wrap,
+.terminal-wrap:hover .terminal .content { color: inherit; display: inline; }
+.terminal:focus *:after,
+.terminal-wrap:hover *:after { content: '' !important; }
+.terminal-wrap { position: relative; }
+.terminal-wrap .copy { display: none; position: absolute; right: 2px; top: 2px; }
+.terminal-wrap:hover .copy { display: block; }
+.terminal-wrap:hover .cursor,
+.terminal:focus .cursor { display: none; }
